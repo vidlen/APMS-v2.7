@@ -1,4 +1,4 @@
-# APMS-V2.5
+# APMS-V2.7
 SHIAPMS is a dashboard for a web based Airport Pavement Management System (APMS) of Soekarno-Hatta Internatonal Airport (SHIA)	
 
 This project is created as a part of thesis defense for Author	
@@ -13,6 +13,10 @@ This tab features a layout of Soekarno-Hatta International Airport that consist 
 
 # PCI Forecasting
 This tab features a forecasting of PCI value for upcoming years. In this thesis, PCI Forecasting is calculated using Markov Chain. The result from PCI forecasting is used as a reference data for building a comprehensive maintenance and rehabilitation plan.
+
+
+# Risk Management
+This tab feautures calculation of risk using two methods. One method is derived from Safety Management Manual and Safety Risk Matrix which are introduced in ICAO Doc 9859. The other method used is Fine-Kinney method which calculated risk using empirical equation.
 
 
 # Rehabilitation Plan
