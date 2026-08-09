@@ -4,7 +4,6 @@ import { pciCategories } from "@/lib/pci-utils";
 import type { SurveyYear } from "@/lib/survey-years";
 import { useData } from "@/lib/data-store";
 import type { SectionRiskMetaOverride } from "@/lib/data-overrides";
-import { keyMarkovForecastByBranch, type MarkovForecastEntry } from "@/lib/markov-forecast";
 import { toBranchRiskInputs } from "@/lib/risk-adapter";
 import { scoreNetwork, riskProfile, type BranchRiskResult } from "@/lib/risk";
 import { ICAO_ZONES, ICAO_GRID_PROVENANCE, type IcaoZoneName } from "@/config/icaoMatrix";
@@ -26,7 +25,6 @@ const ZONE_ORDER: IcaoZoneName[] = ["Intolerable", "Tolerable", "Acceptable"];
 // `?? EMPTY_META` doesn't hand toBranchRiskInputs a fresh object identity on
 // every render and force it to recompute all 75 scores needlessly.
 const EMPTY_META: Record<string, SectionRiskMetaOverride> = {};
-const EMPTY_FORECAST: MarkovForecastEntry[] = [];
 
 // MapView is shared with the PCI tab (backlog F: "reuse the existing GeoJSON
 // component"), whose props include a PCI-band legend filter and a
@@ -79,8 +77,6 @@ function RiskMapLegend({ colorMode }: { colorMode: MapColorMode }) {
 export default function RiskTab({ sections, selectedYear }: RiskTabProps) {
   const { overrides } = useData();
   const riskMetaOverrides = overrides.sectionRiskMeta[selectedYear] ?? EMPTY_META;
-  const markovEntries = overrides.markovForecasts[selectedYear] ?? EMPTY_FORECAST;
-  const markovByBranch = useMemo(() => keyMarkovForecastByBranch(markovEntries), [markovEntries]);
 
   const [colorMode, setColorMode] = useState<MapColorMode>("icao");
   const [query, setQuery] = useState("");
@@ -90,12 +86,10 @@ export default function RiskTab({ sections, selectedYear }: RiskTabProps) {
   // Same 75 branches the PCI tab already shows, scored through the
   // Fine-Kinney engine + ICAO crosswalk (src/lib/risk.ts, src/lib/icao.ts),
   // with any admin-entered Risk Inventory overrides (Admin tab) preferred
-  // over the heuristic defaults in risk-adapter.ts, and Teammate A's Tier 1
-  // forecast (Admin -> Tier 1 Forecast, backlog M) preferred over both where
-  // it covers a branch.
+  // over the heuristic defaults in risk-adapter.ts.
   const inputs = useMemo(
-    () => toBranchRiskInputs(sections, selectedYear, riskMetaOverrides, markovByBranch),
-    [sections, selectedYear, riskMetaOverrides, markovByBranch],
+    () => toBranchRiskInputs(sections, selectedYear, riskMetaOverrides),
+    [sections, selectedYear, riskMetaOverrides],
   );
   const results = useMemo(() => scoreNetwork(inputs), [inputs]);
   const roleByBranch = useMemo(() => {

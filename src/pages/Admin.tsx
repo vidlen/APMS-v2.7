@@ -8,7 +8,6 @@ import SectionEditorTable from "@/components/admin/SectionEditorTable";
 import SampleUnitTable from "@/components/admin/SampleUnitTable";
 import ImportExportPanel from "@/components/admin/ImportExportPanel";
 import RiskInventoryTable from "@/components/admin/RiskInventoryTable";
-import MarkovForecastPanel from "@/components/admin/MarkovForecastPanel";
 
 export default function Admin() {
   const { isAdmin, authReady } = useAuth();
@@ -60,9 +59,6 @@ export default function Admin() {
               <h2 className="text-sm font-bold text-foreground">
                 Section PCI — {selectedYear}
               </h2>
-              <p className="text-[11px] text-muted-foreground">
-                Sections backed by sample units show a computed average — edit their units instead.
-              </p>
             </div>
             <SectionEditorTable year={selectedYear} onEditUnits={setExpandedSection} />
           </div>
@@ -80,16 +76,9 @@ export default function Admin() {
               <h2 className="text-sm font-bold text-foreground">
                 Risk Inventory — {selectedYear}
               </h2>
-              <p className="text-[11px] text-muted-foreground mt-0.5">
-                Feeds the Risk Management tab. Unset fields fall back to an inferred default (role from
-                the branch code, last inspection year from the survey year) — see the Risk tab register
-                for what each branch is currently using.
-              </p>
             </div>
             <RiskInventoryTable year={selectedYear} />
           </div>
-
-          <MarkovForecastPanel year={selectedYear} />
 
           <ImportExportPanel year={selectedYear} />
         </div>

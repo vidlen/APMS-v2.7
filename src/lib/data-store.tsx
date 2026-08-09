@@ -24,7 +24,6 @@ import {
   type SectionRiskMetaOverride,
   type SectionInventoryOverride,
 } from "@/lib/data-overrides";
-import type { MarkovForecastEntry } from "@/lib/markov-forecast";
 
 export interface LiveYearMeta extends YearMeta {
   hasData: boolean;
@@ -197,8 +196,6 @@ interface DataContextValue {
   removeYear: (id: string) => void;
   importSectionsGeoJSON: (year: string, fc: GeoJSONFeatureCollection) => void;
   importUnitsGeoJSON: (year: string, section: string, fc: GeoJSONFeatureCollection) => void;
-  importMarkovForecast: (year: string, entries: MarkovForecastEntry[]) => void;
-  clearMarkovForecast: (year: string) => void;
   resetDrafts: () => void;
 }
 
@@ -316,7 +313,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
       uploadedSections: omitKey(prev.uploadedSections, id),
       uploadedUnits: omitKey(prev.uploadedUnits, id),
       sectionRiskMeta: omitKey(prev.sectionRiskMeta, id),
-      markovForecasts: omitKey(prev.markovForecasts, id),
       sectionInventory: omitKey(prev.sectionInventory, id),
     }));
   }, []);
@@ -341,20 +337,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
     []
   );
 
-  const importMarkovForecast = useCallback((year: string, entries: MarkovForecastEntry[]) => {
-    setOverrides((prev) => ({
-      ...prev,
-      markovForecasts: { ...prev.markovForecasts, [year]: entries },
-    }));
-  }, []);
-
-  const clearMarkovForecast = useCallback((year: string) => {
-    setOverrides((prev) => ({
-      ...prev,
-      markovForecasts: omitKey(prev.markovForecasts, year),
-    }));
-  }, []);
-
   const resetDrafts = useCallback(() => {
     clearOverridesStorage();
     setOverrides(emptyOverrides());
@@ -372,8 +354,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
       removeYear,
       importSectionsGeoJSON,
       importUnitsGeoJSON,
-      importMarkovForecast,
-      clearMarkovForecast,
       resetDrafts,
     }),
     [
@@ -387,8 +367,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
       removeYear,
       importSectionsGeoJSON,
       importUnitsGeoJSON,
-      importMarkovForecast,
-      clearMarkovForecast,
       resetDrafts,
     ]
   );

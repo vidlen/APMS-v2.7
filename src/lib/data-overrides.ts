@@ -1,6 +1,5 @@
 import type { GeoJSONFeatureCollection } from "@/lib/geojson-types";
 import type { BranchRole, Detectability } from "@/config/riskScales";
-import type { MarkovForecastEntry } from "@/lib/markov-forecast";
 import type { SectionData } from "@/lib/pci-utils";
 
 export interface AddedYearMeta {
@@ -57,12 +56,6 @@ export interface DataOverrides {
   uploadedSections: Record<string, GeoJSONFeatureCollection>;
   uploadedUnits: Record<string, Record<string, GeoJSONFeatureCollection>>;
   sectionRiskMeta: Record<string, Record<string, SectionRiskMetaOverride>>;
-  /**
-   * Teammate A's Tier 1 Markov forecast (backlog M, brief section 11),
-   * whole-file replace per year like uploadedSections/uploadedUnits below -
-   * not merged branch-by-branch, since a re-export supersedes the last one.
-   */
-  markovForecasts: Record<string, MarkovForecastEntry[]>;
   sectionInventory: Record<string, Record<string, SectionInventoryOverride>>;
 }
 
@@ -103,7 +96,6 @@ export function emptyOverrides(): DataOverrides {
     uploadedSections: {},
     uploadedUnits: {},
     sectionRiskMeta: {},
-    markovForecasts: {},
     sectionInventory: {},
   };
 }
