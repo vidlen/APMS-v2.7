@@ -1,7 +1,7 @@
 import { toast } from "sonner";
 import { usePavementData } from "@/hooks/usePavementData";
 import { useData } from "@/lib/data-store";
-import { roleFromSectionName, toBranchRiskInputs } from "@/lib/risk-adapter";
+import { inferredRoleFor, inferredDominantDistressFor, toBranchRiskInputs } from "@/lib/risk-adapter";
 import { hazardClassFor, scoreBranch } from "@/lib/risk";
 import LfcOverrideDialog from "./LfcOverrideDialog";
 import {
@@ -82,7 +82,8 @@ export default function RiskInventoryTable({ year }: RiskInventoryTableProps) {
       <TableBody>
         {sections.map((s) => {
           const override = overridesForYear[s.Section] ?? {};
-          const inferredRole = roleFromSectionName(s.Section);
+          const inferredRole = inferredRoleFor(s.Section);
+          const inferredDistress = inferredDominantDistressFor(s.Section);
           // Scoped to the inventory fields the reset button actually clears -
           // lfcOverride has its own clear action inside its dialog, so it
           // shouldn't make this button appear for a row that's otherwise
@@ -142,7 +143,7 @@ export default function RiskInventoryTable({ year }: RiskInventoryTableProps) {
               </TableCell>
               <TableCell>
                 <Select
-                  value={override.dominantDistress ?? NONE_DISTRESS}
+                  value={override.dominantDistress ?? inferredDistress ?? NONE_DISTRESS}
                   onValueChange={(value) =>
                     setSectionRiskMeta(year, s.Section, {
                       dominantDistress: value === NONE_DISTRESS ? undefined : value,
@@ -157,6 +158,7 @@ export default function RiskInventoryTable({ year }: RiskInventoryTableProps) {
                     {DISTRESS_OPTIONS.map((d) => (
                       <SelectItem key={d} value={d}>
                         {d}
+                        {!override.dominantDistress && d === inferredDistress ? " (inferred)" : ""}
                       </SelectItem>
                     ))}
                   </SelectContent>
