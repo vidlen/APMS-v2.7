@@ -117,7 +117,6 @@ export default function RiskInventoryTable({ year }: RiskInventoryTableProps) {
                     {ROLE_OPTIONS.map(([role, label]) => (
                       <SelectItem key={role} value={role}>
                         {label}
-                        {!override.role && role === inferredRole ? " (inferred)" : ""}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -158,7 +157,6 @@ export default function RiskInventoryTable({ year }: RiskInventoryTableProps) {
                     {DISTRESS_OPTIONS.map((d) => (
                       <SelectItem key={d} value={d}>
                         {d}
-                        {!override.dominantDistress && d === inferredDistress ? " (inferred)" : ""}
                       </SelectItem>
                     ))}
                   </SelectContent>
