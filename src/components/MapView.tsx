@@ -15,10 +15,11 @@ import { getPCIStyle, getPCICategory, parsePCIValue } from "@/lib/pci-utils";
 import { useEffectiveYearData } from "@/lib/data-store";
 import type { SurveyYear } from "@/lib/survey-years";
 import type { BranchRiskResult } from "@/lib/risk";
+import type { RehabPlanItem } from "@/lib/rehab";
 import "ol/ol.css";
 
-/** Which ramp colors the base polygons. 'pci' is the only mode outside the Risk tab. */
-export type MapColorMode = "pci" | "icao" | "fk";
+/** Which ramp colors the base polygons. 'pci' is the only mode outside the Risk/Rehab tabs. */
+export type MapColorMode = "pci" | "icao" | "fk" | "rehab";
 
 interface MapViewProps {
   selectedYear: SurveyYear;
@@ -32,6 +33,8 @@ interface MapViewProps {
   colorMode?: MapColorMode;
   /** Only read when colorMode is 'icao' or 'fk'. Keyed by branch Section name (brief backlog F). */
   riskByBranch?: Record<string, BranchRiskResult>;
+  /** Only read when colorMode is 'rehab'. Keyed by branch Section name, same pattern as riskByBranch. */
+  rehabByBranch?: Record<string, RehabPlanItem>;
 }
 
 const GEOJSON_PROJECTION_OPTS = {
@@ -74,6 +77,7 @@ export default function MapView({
   onClearBands,
   colorMode = "pci",
   riskByBranch,
+  rehabByBranch,
 }: MapViewProps) {
   const { sectionsFC, unitsBySection } = useEffectiveYearData(selectedYear);
   const mapRef = useRef<HTMLDivElement>(null);
@@ -90,6 +94,7 @@ export default function MapView({
   // stale values.
   const colorModeRef = useRef<MapColorMode>(colorMode);
   const riskByBranchRef = useRef<Record<string, BranchRiskResult> | undefined>(riskByBranch);
+  const rehabByBranchRef = useRef<Record<string, RehabPlanItem> | undefined>(rehabByBranch);
 
   useEffect(() => {
     detailedSectionRef.current = detailedSection;
@@ -98,7 +103,8 @@ export default function MapView({
   useEffect(() => {
     colorModeRef.current = colorMode;
     riskByBranchRef.current = riskByBranch;
-  }, [colorMode, riskByBranch]);
+    rehabByBranchRef.current = rehabByBranch;
+  }, [colorMode, riskByBranch, rehabByBranch]);
 
   // Style function for base pavement features
   const styleFunction = useCallback(
@@ -114,15 +120,16 @@ export default function MapView({
       }
 
       if (colorMode !== "pci") {
-        // Risk color modes (icao/fk): the ramp color is looked up per
-        // branch. No PCI band dimming here - `activeBands` is a PCI-tab-only
-        // filter concept and the Risk tab never sets it.
-        const result = riskByBranch?.[sectionName];
-        const hex = result
-          ? colorMode === "icao"
-            ? result.icao.zoneColor
-            : result.band.color
-          : RISK_FALLBACK_COLOR;
+        // Risk/Rehab color modes: the ramp color is looked up per branch. No
+        // PCI band dimming here - `activeBands` is a PCI-tab-only filter
+        // concept and neither the Risk nor Rehab tab sets it.
+        let hex: string;
+        if (colorMode === "rehab") {
+          hex = rehabByBranch?.[sectionName]?.color ?? RISK_FALLBACK_COLOR;
+        } else {
+          const result = riskByBranch?.[sectionName];
+          hex = result ? (colorMode === "icao" ? result.icao.zoneColor : result.band.color) : RISK_FALLBACK_COLOR;
+        }
         return new Style({
           fill: new Fill({ color: hexToRgba(hex, 0.72) }),
           stroke: new Stroke({
@@ -155,7 +162,7 @@ export default function MapView({
         }),
       });
     },
-    [selectedSection, detailedSection, activeBands, colorMode, riskByBranch]
+    [selectedSection, detailedSection, activeBands, colorMode, riskByBranch, rehabByBranch]
   );
 
   // Style function for sample-unit features
@@ -299,6 +306,12 @@ export default function MapView({
           const pciValue = Number(props["pci_score"]);
           const label = getPCICategory(pciValue).label;
           tooltipEl.innerHTML = `<strong>Sample Unit <span class="font-mono">${props["sampleUnit"]}</span></strong> &middot; PCI: <span class="font-mono">${pciValue.toFixed(2)}</span> &middot; ${label}`;
+        } else if (colorModeRef.current === "rehab") {
+          const sectionName = props["Section"];
+          const item = rehabByBranchRef.current?.[sectionName];
+          tooltipEl.innerHTML = item
+            ? `<strong class="font-mono">${sectionName}</strong> &middot; ${item.priorityYear} &middot; ${item.treatment}`
+            : `<strong class="font-mono">${sectionName}</strong>`;
         } else if (colorModeRef.current !== "pci") {
           const sectionName = props["Section"];
           const result = riskByBranchRef.current?.[sectionName];
