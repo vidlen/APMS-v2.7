@@ -1,14 +1,12 @@
 import type { SectionData } from "./pci-utils.ts";
 import { parsePCIValue } from "./pci-utils.ts";
-import { TRIGGER_STATE_PCI } from "../config/riskScales.ts";
 
 export type RehabTreatment =
   | "No M&R"
-  | "Preventive Maintenance (Seal Coat)"
-  | "AC Rehabilitation"
-  | "PCC Rehabilitation"
-  | "AC Reconstruction"
-  | "PCC Reconstruction";
+  | "Seal Coat / Crack Sealing"
+  | "5 cm Overlay"
+  | "6 cm Overlay"
+  | "12 cm Structural Overlay";
 
 export type RehabYear = "Year 1" | "Year 2" | "Year 3" | "Year 4" | "Year 5" | "Not Scheduled";
 
@@ -25,37 +23,37 @@ export const REHAB_YEAR_COLORS: Record<RehabYear, string> = {
   "Not Scheduled": "#d4d4d4",
 };
 
+// The thesis's four-case-study treatment matrix: a PCI ceiling below which
+// that treatment applies, most severe first so a branch matches exactly one
+// row. Exported as-is (not just folded into getTreatment) so the tab can
+// render the same table it decides from, rather than a second hand-typed
+// copy of it.
+export const REHAB_METHODOLOGY: { treatment: RehabTreatment; maxPci: number }[] = [
+  { treatment: "12 cm Structural Overlay", maxPci: 40 },
+  { treatment: "6 cm Overlay", maxPci: 53 },
+  { treatment: "5 cm Overlay", maxPci: 65 },
+  { treatment: "Seal Coat / Crack Sealing", maxPci: 80 },
+];
+
+// PCI above which no treatment is needed - the least severe row's ceiling.
+export const REHAB_TRIGGER_PCI = REHAB_METHODOLOGY[REHAB_METHODOLOGY.length - 1].maxPci;
+
 export interface RehabPlanItem {
   section: SectionData;
   pci: number;
-  surfaceFamily: "AC" | "PCC";
   treatment: RehabTreatment;
   priorityYear: RehabYear;
   color: string;
 }
 
-// The riding/wearing surface drives the M&R treatment, not what's underneath
-// it - "Asphalt on PCC" is rehabilitated as an asphalt surface (mill &
-// overlay), same as plain "Asphalt". Only "Concrete" is an exposed PCC
-// surface.
-function getSurfaceFamily(section: SectionData): "AC" | "PCC" {
-  return section.Type.trim().toLowerCase() === "concrete" ? "PCC" : "AC";
+function getTreatment(pci: number): RehabTreatment {
+  for (const { treatment, maxPci } of REHAB_METHODOLOGY) {
+    if (pci <= maxPci) return treatment;
+  }
+  return "No M&R";
 }
 
-// Planning-level treatment by PCI, collapsed from the same 7-band ramp used
-// everywhere else (pciCategories) down to the M&R actions FDOT's SAPMP
-// Rehabilitation Plan tab reports (mr_type): no action above the trigger
-// PCI, seal coat at the trigger already documented in riskScales.ts, major
-// rehabilitation through Fair/Poor/Very Poor, reconstruction once a branch
-// is Serious or worse.
-function getTreatment(pci: number, family: "AC" | "PCC"): RehabTreatment {
-  if (pci >= TRIGGER_STATE_PCI) return "No M&R";
-  if (pci >= 71) return "Preventive Maintenance (Seal Coat)";
-  if (pci >= 26) return family === "PCC" ? "PCC Rehabilitation" : "AC Rehabilitation";
-  return family === "PCC" ? "PCC Reconstruction" : "AC Reconstruction";
-}
-
-// Priority year: branches that trigger (PCI below TRIGGER_STATE_PCI) are
+// Priority year: branches that trigger (any treatment other than No M&R) are
 // ranked worst-PCI-first - the same ordering risk.ts' comparePriorityOrders
 // already compares itself against - and spread evenly across a 5-year
 // window, worst branches first.
@@ -64,8 +62,7 @@ export function computeRehabPlan(sections: SectionData[]): RehabPlanItem[] {
 
   const scored = branches.map((section) => {
     const pci = parsePCIValue(section["PCI Rating"]);
-    const surfaceFamily = getSurfaceFamily(section);
-    return { section, pci, surfaceFamily, treatment: getTreatment(pci, surfaceFamily) };
+    return { section, pci, treatment: getTreatment(pci) };
   });
 
   const triggered = scored.filter((s) => s.treatment !== "No M&R").sort((a, b) => a.pci - b.pci);

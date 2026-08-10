@@ -5,6 +5,7 @@ import type { SurveyYear } from "@/lib/survey-years";
 import { computeRehabPlan, REHAB_YEARS, type RehabPlanItem, type RehabYear } from "@/lib/rehab";
 import MapView from "@/components/MapView";
 import RehabStatsBar from "./RehabStatsBar";
+import RehabMethodology from "./RehabMethodology";
 import RehabPriorityList from "./RehabPriorityList";
 import RehabLegend from "./RehabLegend";
 import RehabDetailPanel from "./RehabDetailPanel";
@@ -146,6 +147,7 @@ export default function RehabTab({ sections, selectedYear }: RehabTabProps) {
           ) : (
             <>
               <RehabStatsBar plan={plan} onOpenTable={() => setShowTable(true)} />
+              <RehabMethodology />
               <RehabPriorityList plan={plan} onSelect={handleFeatureClick} onShowAll={() => setShowTable(true)} />
               <RehabLegend
                 activeYears={activeYears}

@@ -2,47 +2,51 @@
  * rehab.test.ts
  * -----------------------------------------------------------------------------
  * computeRehabPlan is the one non-obvious piece of logic in rehab.ts: the
- * surface-family/treatment decision per PCI band, and the worst-PCI-first
- * bucketing of triggered branches across a 5-year window. A silently-wrong
- * bucket count or a mis-typed treatment would misinform the Rehabilitation
- * Plan tab's map colors and register without ever throwing.
+ * four-case-study PCI threshold table (REHAB_METHODOLOGY) that decides a
+ * branch's treatment, and the worst-PCI-first bucketing of triggered
+ * branches across a 5-year window. A silently-wrong boundary or bucket count
+ * would misinform the Rehabilitation Plan tab's map colors and register
+ * without ever throwing.
  * -----------------------------------------------------------------------------
  */
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { computeRehabPlan } from './rehab.ts';
-import { TRIGGER_STATE_PCI } from '../config/riskScales.ts';
+import { computeRehabPlan, REHAB_TRIGGER_PCI } from './rehab.ts';
 import type { SectionData } from './pci-utils.ts';
 
 function section(overrides: Partial<SectionData> & { Section: string; "PCI Rating": string }): SectionData {
   return { PCN: '80/F/A/X/T', Type: 'Asphalt', ...overrides };
 }
 
-test('a branch at or above the trigger PCI gets No M&R and is Not Scheduled', () => {
-  const plan = computeRehabPlan([section({ Section: 'A1', 'PCI Rating': String(TRIGGER_STATE_PCI) })]);
+test('a branch above the trigger PCI gets No M&R and is Not Scheduled', () => {
+  const plan = computeRehabPlan([section({ Section: 'A1', 'PCI Rating': String(REHAB_TRIGGER_PCI + 1) })]);
   assert.equal(plan[0].treatment, 'No M&R');
   assert.equal(plan[0].priorityYear, 'Not Scheduled');
 });
 
-test('an exposed Concrete surface gets a PCC treatment, "Asphalt on PCC" gets an AC treatment', () => {
+test('each of the four case-study thresholds selects its own treatment at the boundary', () => {
   const plan = computeRehabPlan([
-    section({ Section: 'PCC1', 'PCI Rating': '50', Type: 'Concrete' }),
-    section({ Section: 'COMPOSITE1', 'PCI Rating': '50', Type: 'Asphalt on PCC' }),
+    section({ Section: 'SEAL', 'PCI Rating': '80' }), // <= 80
+    section({ Section: 'OV5', 'PCI Rating': '65' }), // <= 65
+    section({ Section: 'OV6', 'PCI Rating': '53' }), // <= 53
+    section({ Section: 'OV12', 'PCI Rating': '40' }), // <= 40
   ]);
-  assert.equal(plan.find((p) => p.section.Section === 'PCC1')?.treatment, 'PCC Rehabilitation');
-  assert.equal(plan.find((p) => p.section.Section === 'COMPOSITE1')?.treatment, 'AC Rehabilitation');
+  assert.equal(plan.find((p) => p.section.Section === 'SEAL')?.treatment, 'Seal Coat / Crack Sealing');
+  assert.equal(plan.find((p) => p.section.Section === 'OV5')?.treatment, '5 cm Overlay');
+  assert.equal(plan.find((p) => p.section.Section === 'OV6')?.treatment, '6 cm Overlay');
+  assert.equal(plan.find((p) => p.section.Section === 'OV12')?.treatment, '12 cm Structural Overlay');
 });
 
-test('treatment escalates from seal coat to rehabilitation to reconstruction as PCI drops', () => {
+test('a PCI just above a threshold falls into the lighter treatment, not the heavier one', () => {
   const plan = computeRehabPlan([
-    section({ Section: 'SEAL', 'PCI Rating': '75' }),
-    section({ Section: 'REHAB', 'PCI Rating': '50' }),
-    section({ Section: 'RECON', 'PCI Rating': '20' }),
+    section({ Section: 'JUST_ABOVE_65', 'PCI Rating': '66' }),
+    section({ Section: 'JUST_ABOVE_53', 'PCI Rating': '54' }),
+    section({ Section: 'JUST_ABOVE_40', 'PCI Rating': '41' }),
   ]);
-  assert.equal(plan.find((p) => p.section.Section === 'SEAL')?.treatment, 'Preventive Maintenance (Seal Coat)');
-  assert.equal(plan.find((p) => p.section.Section === 'REHAB')?.treatment, 'AC Rehabilitation');
-  assert.equal(plan.find((p) => p.section.Section === 'RECON')?.treatment, 'AC Reconstruction');
+  assert.equal(plan.find((p) => p.section.Section === 'JUST_ABOVE_65')?.treatment, 'Seal Coat / Crack Sealing');
+  assert.equal(plan.find((p) => p.section.Section === 'JUST_ABOVE_53')?.treatment, '5 cm Overlay');
+  assert.equal(plan.find((p) => p.section.Section === 'JUST_ABOVE_40')?.treatment, '6 cm Overlay');
 });
 
 test('triggered branches are bucketed worst-PCI-first across exactly 5 years', () => {

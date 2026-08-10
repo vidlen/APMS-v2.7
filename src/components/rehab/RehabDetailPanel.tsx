@@ -1,7 +1,6 @@
 import { X, Wrench, CalendarClock, Layers } from "lucide-react";
 import { pciCategories, getPCICategory } from "@/lib/pci-utils";
-import { REHAB_YEARS, REHAB_YEAR_COLORS, type RehabPlanItem } from "@/lib/rehab";
-import { TRIGGER_STATE_PCI } from "@/config/riskScales";
+import { REHAB_YEARS, REHAB_YEAR_COLORS, REHAB_TRIGGER_PCI, type RehabPlanItem } from "@/lib/rehab";
 import { parseConstructionYear, parseDimension } from "@/lib/section-meta-utils";
 
 interface RehabDetailPanelProps {
@@ -12,7 +11,7 @@ interface RehabDetailPanelProps {
 const SCHEDULED_YEARS = REHAB_YEARS.filter((y) => y !== "Not Scheduled");
 
 export default function RehabDetailPanel({ item, onClose }: RehabDetailPanelProps) {
-  const { section, pci, surfaceFamily, treatment, priorityYear } = item;
+  const { section, pci, treatment, priorityYear } = item;
   const condition = getPCICategory(pci);
   const constructionYear = section["Last Major Construction Year"]
     ? parseConstructionYear(section["Last Major Construction Year"])
@@ -54,9 +53,7 @@ export default function RehabDetailPanel({ item, onClose }: RehabDetailPanelProp
             <h3 className="panel-label">Recommended Treatment</h3>
           </div>
           <p className="text-foreground text-lg font-semibold">{treatment}</p>
-          <p className="text-muted-foreground text-xs mt-1">
-            {surfaceFamily} surface · planning-level, based on current PCI
-          </p>
+          <p className="text-muted-foreground text-xs mt-1">Planning-level, based on current PCI</p>
         </section>
 
         {/* PCI at last inspection */}
@@ -83,7 +80,7 @@ export default function RehabDetailPanel({ item, onClose }: RehabDetailPanelProp
             ))}
           </div>
           <p className="text-[11px] text-muted-foreground mt-2">
-            Treatment triggers once PCI falls below {TRIGGER_STATE_PCI}.
+            Treatment triggers once PCI falls to {REHAB_TRIGGER_PCI} or below.
           </p>
         </section>
 
