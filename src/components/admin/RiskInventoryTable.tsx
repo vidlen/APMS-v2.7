@@ -177,7 +177,7 @@ export default function RiskInventoryTable({ year }: RiskInventoryTableProps) {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value={INFERRED_DETECTABILITY}>
-                      {DETECTABILITY_LABELS[inferredDetectability]} (inferred, not applied)
+                      {DETECTABILITY_LABELS[inferredDetectability]}
                     </SelectItem>
                     {DETECTABILITY_OPTIONS.map((d) => (
                       <SelectItem key={d} value={d}>

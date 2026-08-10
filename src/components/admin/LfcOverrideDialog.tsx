@@ -148,8 +148,8 @@ export default function LfcOverrideDialog({
         <DialogHeader>
           <DialogTitle>{branchName} &mdash; override L, F, C</DialogTitle>
           <DialogDescription>
-            An expert override replaces the engine's computed value outright (locked decision 10 - it still
-            shows in the branch's trace). Leave a field at "Use computed" to keep the engine's own number.
+            An expert override replaces the engine's computed value outright. Leave a field at "Use computed"
+            to keep the engine's own number.
           </DialogDescription>
         </DialogHeader>
 
