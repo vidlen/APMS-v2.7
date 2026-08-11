@@ -3,6 +3,7 @@ import { Navigate, Link } from "react-router";
 import { Plane, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useData } from "@/lib/data-store";
+import { useNarrowViewport } from "@/hooks/useNarrowViewport";
 import YearManager from "@/components/admin/YearManager";
 import SectionEditorTable from "@/components/admin/SectionEditorTable";
 import SampleUnitTable from "@/components/admin/SampleUnitTable";
@@ -12,15 +13,19 @@ import RehabInventoryTable from "@/components/admin/RehabInventoryTable";
 
 type AdminTab = "pci" | "rehab" | "risk";
 
-const ADMIN_TABS: { id: AdminTab; label: string }[] = [
-  { id: "pci", label: "Pavement Condition Index (PCI)" },
-  { id: "rehab", label: "Rehabilitation Plan" },
-  { id: "risk", label: "Risk Management" },
+// shortLabel keeps all 3 tabs on one line on narrow viewports - see the same
+// fix on Home.tsx's WORKSPACE_TABS for why (full labels overflowed a 375px
+// tab bar with no scroll affordance).
+const ADMIN_TABS: { id: AdminTab; label: string; shortLabel: string }[] = [
+  { id: "pci", label: "Pavement Condition Index (PCI)", shortLabel: "PCI" },
+  { id: "rehab", label: "Rehabilitation Plan", shortLabel: "Rehab" },
+  { id: "risk", label: "Risk Management", shortLabel: "Risk" },
 ];
 
 export default function Admin() {
   const { isAdmin, authReady } = useAuth();
   const { years } = useData();
+  const isNarrow = useNarrowViewport();
   const [selectedYear, setSelectedYear] = useState<string>(() => years[0]?.id ?? "2025");
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<AdminTab>("pci");
@@ -68,7 +73,7 @@ export default function Admin() {
         className="shrink-0 flex items-center justify-center gap-4 bg-card border-b border-border z-20 px-4"
         role="tablist"
       >
-        <div className="flex items-center gap-[30px] overflow-x-auto">
+        <div className={`flex items-center overflow-x-auto ${isNarrow ? "gap-5" : "gap-[30px]"}`}>
           {ADMIN_TABS.map((tab) => (
             <button
               key={tab.id}
@@ -81,7 +86,7 @@ export default function Admin() {
                   : "text-muted-foreground border-b-transparent hover:text-foreground"
               }`}
             >
-              {tab.label}
+              {isNarrow ? tab.shortLabel : tab.label}
             </button>
           ))}
         </div>

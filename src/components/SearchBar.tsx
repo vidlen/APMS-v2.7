@@ -47,7 +47,7 @@ export default function SearchBar({ sections, onSelect, selectedSection }: Searc
   };
 
   return (
-    <div className="relative w-full max-w-[200px] sm:max-w-[280px]">
+    <div className="relative flex-1 min-w-0 max-w-[200px] sm:max-w-[280px]">
       <div
         className={`flex items-center gap-2.5 bg-background border border-border rounded-md h-8 px-3 transition-colors ${
           focused ? "border-primary/50 ring-1 ring-primary/30 bg-card" : ""
@@ -69,7 +69,7 @@ export default function SearchBar({ sections, onSelect, selectedSection }: Searc
           onKeyDown={(e) => {
             if (e.key === "Escape") setFocused(false);
           }}
-          className="bg-transparent border-none outline-none text-foreground text-sm placeholder:text-muted-foreground w-full"
+          className="bg-transparent border-none outline-none text-foreground text-sm placeholder:text-muted-foreground w-full min-w-0"
         />
         {query ? (
           <button

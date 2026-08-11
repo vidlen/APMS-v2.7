@@ -24,21 +24,29 @@ const MIN_LOADING_SCREEN_MS = 2000;
 
 type WorkspaceTab = "pci" | "forecast" | "rehab" | "risk";
 
-const WORKSPACE_TABS: { id: WorkspaceTab; label: string; placeholderCaption?: string }[] = [
-  { id: "pci", label: "Pavement Condition Index (PCI)" },
+// shortLabel keeps all 4 tabs on screen at once on narrow viewports - the
+// full labels total ~742px, more than double a 375px screen, leaving the
+// tab bar horizontally scrollable with zero scroll affordance (no arrow, no
+// fade), so "Rehabilitation Plan" and "Risk Management" were effectively
+// undiscoverable there.
+const WORKSPACE_TABS: { id: WorkspaceTab; label: string; shortLabel: string; placeholderCaption?: string }[] = [
+  { id: "pci", label: "Pavement Condition Index (PCI)", shortLabel: "PCI" },
   {
     id: "forecast",
     label: "PCI Forecasting",
+    shortLabel: "Forecast",
     placeholderCaption: "This Feature Still Waiting for ATC Clearance to Take Off",
   },
   {
     id: "rehab",
     label: "Rehabilitation Plan",
+    shortLabel: "Rehab",
     placeholderCaption: "No PCI survey data loaded for this year yet",
   },
   {
     id: "risk",
     label: "Risk Management",
+    shortLabel: "Risk",
     placeholderCaption: "No PCI survey data loaded for this year yet",
   },
 ];
@@ -249,13 +257,21 @@ export default function Home() {
             <div className="w-[30px] h-[30px] rounded-md bg-primary flex items-center justify-center shrink-0">
               <Plane size={15} className="text-primary-foreground" />
             </div>
-            <div className={`leading-tight ${isNarrow ? "min-w-0" : "shrink-0"}`}>
+            {/* Narrow viewports show the short real abbreviation instead of
+                ellipsis-truncating the long name - the full title's own
+                min-content width (even with truncate) still squeezed the
+                search input on 375px screens down to an unusably ~40px, and
+                a fixed pixel cap tight enough to fix that would have cut the
+                full name off mid-word ("AIRPORT P…"). */}
+            <div className="leading-tight shrink-0">
               <h1 className="text-foreground font-condensed text-[15.5px] font-semibold tracking-[.055em] uppercase leading-tight truncate">
-                Airport Pavement Management System
+                {isNarrow ? "APMS" : "Airport Pavement Management System"}
               </h1>
-              <p className="text-muted-foreground text-[9.5px] font-medium tracking-[.13em] uppercase leading-tight truncate">
-                Soekarno–Hatta International · CGK
-              </p>
+              {!isNarrow && (
+                <p className="text-muted-foreground text-[9.5px] font-medium tracking-[.13em] uppercase leading-tight truncate">
+                  Soekarno–Hatta International · CGK
+                </p>
+              )}
             </div>
           </div>
 
@@ -285,7 +301,7 @@ export default function Home() {
         className="shrink-0 flex items-center justify-center gap-4 bg-card border-b border-border z-20 px-4"
         role="tablist"
       >
-        <div className="flex items-center gap-[30px] overflow-x-auto">
+        <div className={`flex items-center overflow-x-auto ${isNarrow ? "gap-5" : "gap-[30px]"}`}>
           {WORKSPACE_TABS.map((tab) => (
             <button
               key={tab.id}
@@ -298,7 +314,7 @@ export default function Home() {
                   : "text-muted-foreground border-b-transparent hover:text-foreground"
               }`}
             >
-              {tab.label}
+              {isNarrow ? tab.shortLabel : tab.label}
             </button>
           ))}
         </div>

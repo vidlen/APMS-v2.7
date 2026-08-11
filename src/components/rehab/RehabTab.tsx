@@ -5,6 +5,7 @@ import type { SurveyYear } from "@/lib/survey-years";
 import { computeRehabPlan, REHAB_YEARS, type RehabPlanItem, type RehabYear } from "@/lib/rehab";
 import type { SectionRehabOverride } from "@/lib/data-overrides";
 import { useData } from "@/lib/data-store";
+import { useNarrowViewport } from "@/hooks/useNarrowViewport";
 import MapView from "@/components/MapView";
 import RehabStatsBar from "./RehabStatsBar";
 import RehabMethodology from "./RehabMethodology";
@@ -18,13 +19,6 @@ interface RehabTabProps {
   selectedYear: SurveyYear;
 }
 
-// Same responsive shell as the PCI tab (src/pages/Home.tsx): docked sidebar
-// on desktop, full-width overlay under NARROW_BREAKPOINT.
-const NARROW_BREAKPOINT = 640;
-function isNarrowViewport() {
-  return typeof window !== "undefined" && window.innerWidth < NARROW_BREAKPOINT;
-}
-
 function noop() {}
 
 // Stable reference for years with no admin-entered rehab overrides, so
@@ -36,18 +30,17 @@ export default function RehabTab({ sections, selectedYear }: RehabTabProps) {
   const { overrides } = useData();
   const rehabOverrides = overrides.sectionRehab[selectedYear] ?? EMPTY_REHAB_META;
 
-  const [isNarrow, setIsNarrow] = useState(isNarrowViewport);
+  // Same responsive shell as the PCI tab (src/pages/Home.tsx): docked
+  // sidebar on desktop, full-width overlay under the narrow breakpoint.
+  const isNarrow = useNarrowViewport();
   const [viewportWidth, setViewportWidth] = useState(() => window.innerWidth);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(isNarrowViewport);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(isNarrow);
   const [selectedSection, setSelectedSection] = useState<SectionData | null>(null);
   const [showTable, setShowTable] = useState(false);
   const [activeYears, setActiveYears] = useState<Set<RehabYear>>(new Set());
 
   useEffect(() => {
-    const onResize = () => {
-      setIsNarrow(isNarrowViewport());
-      setViewportWidth(window.innerWidth);
-    };
+    const onResize = () => setViewportWidth(window.innerWidth);
     onResize();
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
