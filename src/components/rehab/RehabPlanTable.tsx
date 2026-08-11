@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Search, ArrowUp, ArrowDown, ArrowUpDown, X } from "lucide-react";
 import type { SectionData } from "@/lib/pci-utils";
-import { REHAB_YEARS, REHAB_YEAR_COLORS, type RehabPlanItem, type RehabYear } from "@/lib/rehab";
+import { REHAB_YEARS, REHAB_YEAR_COLORS, formatIdrCompact, type RehabPlanItem, type RehabYear } from "@/lib/rehab";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -21,14 +21,15 @@ interface RehabPlanTableProps {
   onClose: () => void;
 }
 
-type SortKey = "Section" | "PCI" | "Treatment" | "Year";
+type SortKey = "Section" | "PCI" | "Treatment" | "Year" | "Cost";
 type SortDir = "asc" | "desc";
 
-const COLUMNS: { key: SortKey; label: string }[] = [
+const COLUMNS: { key: SortKey; label: string; title?: string }[] = [
   { key: "Section", label: "Section" },
   { key: "PCI", label: "PCI" },
   { key: "Treatment", label: "Treatment" },
   { key: "Year", label: "Priority" },
+  { key: "Cost", label: "Funds", title: "Placeholder estimate - not a real cost projection" },
 ];
 
 export default function RehabPlanTable({
@@ -63,6 +64,7 @@ export default function RehabPlanTable({
     return filtered.slice().sort((a, b) => {
       if (sortKey === "PCI") return (a.pci - b.pci) * dir;
       if (sortKey === "Treatment") return a.treatment.localeCompare(b.treatment) * dir;
+      if (sortKey === "Cost") return (a.costIdr - b.costIdr) * dir;
       if (sortKey === "Year") {
         const yearRank = REHAB_YEARS.indexOf(a.priorityYear) - REHAB_YEARS.indexOf(b.priorityYear);
         return (yearRank || a.pci - b.pci) * dir;
@@ -137,6 +139,7 @@ export default function RehabPlanTable({
               <TableHead
                 key={col.key}
                 className="px-1.5"
+                title={col.title}
                 aria-sort={sortKey === col.key ? (sortDir === "asc" ? "ascending" : "descending") : "none"}
               >
                 <button
@@ -194,6 +197,9 @@ export default function RehabPlanTable({
                   >
                     {item.priorityYear === "Not Scheduled" ? "—" : item.priorityYear.replace("Year ", "Y")}
                   </span>
+                </TableCell>
+                <TableCell className="p-1.5 font-mono text-xs tabular-nums text-muted-foreground whitespace-nowrap">
+                  {item.costIdr > 0 ? formatIdrCompact(item.costIdr) : "—"}
                 </TableCell>
               </TableRow>
             );

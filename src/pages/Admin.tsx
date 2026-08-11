@@ -8,6 +8,7 @@ import SectionEditorTable from "@/components/admin/SectionEditorTable";
 import SampleUnitTable from "@/components/admin/SampleUnitTable";
 import ImportExportPanel from "@/components/admin/ImportExportPanel";
 import RiskInventoryTable from "@/components/admin/RiskInventoryTable";
+import RehabInventoryTable from "@/components/admin/RehabInventoryTable";
 
 export default function Admin() {
   const { isAdmin, authReady } = useAuth();
@@ -78,6 +79,15 @@ export default function Admin() {
               </h2>
             </div>
             <RiskInventoryTable year={selectedYear} />
+          </div>
+
+          <div className="panel-surface rounded-lg overflow-hidden">
+            <div className="px-4 py-3 border-b border-border">
+              <h2 className="text-sm font-bold text-foreground">
+                Rehabilitation Plan — {selectedYear}
+              </h2>
+            </div>
+            <RehabInventoryTable year={selectedYear} />
           </div>
 
           <ImportExportPanel year={selectedYear} />

@@ -20,9 +20,11 @@ import {
   emptyOverrides,
   mergeSectionRiskMeta,
   mergeSectionInventory,
+  mergeSectionRehab,
   type DataOverrides,
   type SectionRiskMetaOverride,
   type SectionInventoryOverride,
+  type SectionRehabOverride,
 } from "@/lib/data-overrides";
 
 export interface LiveYearMeta extends YearMeta {
@@ -192,6 +194,7 @@ interface DataContextValue {
   setUnitScore: (year: string, section: string, unitId: number, score: number) => void;
   setSectionRiskMeta: (year: string, section: string, patch: Partial<SectionRiskMetaOverride>) => void;
   setSectionInventory: (year: string, section: string, patch: SectionInventoryOverride) => void;
+  setSectionRehab: (year: string, section: string, patch: Partial<SectionRehabOverride>) => void;
   addYear: (input: { label: string; clonedFrom: string | null }) => string;
   removeYear: (id: string) => void;
   importSectionsGeoJSON: (year: string, fc: GeoJSONFeatureCollection) => void;
@@ -289,6 +292,22 @@ export function DataProvider({ children }: { children: ReactNode }) {
     [],
   );
 
+  const setSectionRehab = useCallback(
+    (year: string, section: string, patch: Partial<SectionRehabOverride>) => {
+      setOverrides((prev) => {
+        const merged = mergeSectionRehab(prev.sectionRehab[year]?.[section] ?? {}, patch);
+        return {
+          ...prev,
+          sectionRehab: {
+            ...prev.sectionRehab,
+            [year]: { ...(prev.sectionRehab[year] ?? {}), [section]: merged },
+          },
+        };
+      });
+    },
+    [],
+  );
+
   const addYear = useCallback((input: { label: string; clonedFrom: string | null }) => {
     const id = input.label.trim();
     setOverrides((prev) => ({
@@ -314,6 +333,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       uploadedUnits: omitKey(prev.uploadedUnits, id),
       sectionRiskMeta: omitKey(prev.sectionRiskMeta, id),
       sectionInventory: omitKey(prev.sectionInventory, id),
+      sectionRehab: omitKey(prev.sectionRehab, id),
     }));
   }, []);
 
@@ -350,6 +370,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       setUnitScore,
       setSectionRiskMeta,
       setSectionInventory,
+      setSectionRehab,
       addYear,
       removeYear,
       importSectionsGeoJSON,
@@ -363,6 +384,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       setUnitScore,
       setSectionRiskMeta,
       setSectionInventory,
+      setSectionRehab,
       addYear,
       removeYear,
       importSectionsGeoJSON,

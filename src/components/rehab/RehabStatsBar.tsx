@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { ArrowRight } from "lucide-react";
-import { REHAB_YEARS, REHAB_YEAR_COLORS, type RehabPlanItem } from "@/lib/rehab";
+import { REHAB_YEARS, REHAB_YEAR_COLORS, formatIdrCompact, type RehabPlanItem } from "@/lib/rehab";
 
 interface RehabStatsBarProps {
   plan: RehabPlanItem[];
@@ -11,6 +11,7 @@ export default function RehabStatsBar({ plan, onOpenTable }: RehabStatsBarProps)
   const stats = useMemo(() => {
     const total = plan.length;
     const scheduled = plan.filter((p) => p.priorityYear !== "Not Scheduled").length;
+    const totalCostIdr = plan.reduce((sum, p) => sum + p.costIdr, 0);
     const counts = REHAB_YEARS.reduce(
       (acc, y) => {
         acc[y] = plan.filter((p) => p.priorityYear === y).length;
@@ -18,7 +19,7 @@ export default function RehabStatsBar({ plan, onOpenTable }: RehabStatsBarProps)
       },
       {} as Record<string, number>
     );
-    return { total, scheduled, counts };
+    return { total, scheduled, totalCostIdr, counts };
   }, [plan]);
 
   return (
@@ -49,6 +50,17 @@ export default function RehabStatsBar({ plan, onOpenTable }: RehabStatsBarProps)
           <div className="text-[9px] tracking-[.07em] uppercase text-muted-foreground">Need M&amp;R</div>
         </div>
       </div>
+
+      {/* Funds needed - placeholder estimate, see the disclaimer below */}
+      <div className="mt-4 rounded-md border border-dashed border-border px-3 py-2.5 flex items-baseline justify-between gap-2">
+        <span className="text-[10px] tracking-[.07em] uppercase text-muted-foreground">Est. Funds Needed</span>
+        <span className="font-mono text-base font-bold tabular-nums text-foreground">
+          {formatIdrCompact(stats.totalCostIdr)}
+        </span>
+      </div>
+      <p className="text-[10px] text-muted-foreground/70 italic mt-1.5">
+        Placeholder estimate for demonstration only — not a real cost projection.
+      </p>
 
       {/* Distribution across the 5-year window */}
       <div className="mt-4">

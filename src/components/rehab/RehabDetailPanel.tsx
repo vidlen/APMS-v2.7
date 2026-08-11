@@ -1,6 +1,6 @@
-import { X, Wrench, CalendarClock, Layers } from "lucide-react";
+import { X, Wrench, CalendarClock, Layers, Banknote } from "lucide-react";
 import { pciCategories, getPCICategory } from "@/lib/pci-utils";
-import { REHAB_YEARS, REHAB_YEAR_COLORS, REHAB_TRIGGER_PCI, type RehabPlanItem } from "@/lib/rehab";
+import { REHAB_YEARS, REHAB_YEAR_COLORS, REHAB_TRIGGER_PCI, formatIdr, type RehabPlanItem } from "@/lib/rehab";
 import { parseConstructionYear, parseDimension } from "@/lib/section-meta-utils";
 
 interface RehabDetailPanelProps {
@@ -11,7 +11,7 @@ interface RehabDetailPanelProps {
 const SCHEDULED_YEARS = REHAB_YEARS.filter((y) => y !== "Not Scheduled");
 
 export default function RehabDetailPanel({ item, onClose }: RehabDetailPanelProps) {
-  const { section, pci, treatment, priorityYear } = item;
+  const { section, pci, treatment, priorityYear, costIdr } = item;
   const condition = getPCICategory(pci);
   const constructionYear = section["Last Major Construction Year"]
     ? parseConstructionYear(section["Last Major Construction Year"])
@@ -110,6 +110,18 @@ export default function RehabDetailPanel({ item, onClose }: RehabDetailPanelProp
               );
             })}
           </div>
+        </section>
+
+        {/* Funds needed */}
+        <section className="py-5 border-t border-border">
+          <div className="flex items-center gap-2 mb-3">
+            <Banknote size={14} className="text-muted-foreground" />
+            <h3 className="panel-label">Funds Needed</h3>
+          </div>
+          <p className="text-foreground text-2xl font-bold font-mono tabular-nums">
+            {costIdr > 0 ? formatIdr(costIdr) : "—"}
+          </p>
+          <p className="text-muted-foreground text-xs mt-1">Placeholder estimate for demonstration only</p>
         </section>
 
         {/* Last Major Construction */}

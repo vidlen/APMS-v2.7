@@ -3,6 +3,8 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { SectionData } from "@/lib/pci-utils";
 import type { SurveyYear } from "@/lib/survey-years";
 import { computeRehabPlan, REHAB_YEARS, type RehabPlanItem, type RehabYear } from "@/lib/rehab";
+import type { SectionRehabOverride } from "@/lib/data-overrides";
+import { useData } from "@/lib/data-store";
 import MapView from "@/components/MapView";
 import RehabStatsBar from "./RehabStatsBar";
 import RehabMethodology from "./RehabMethodology";
@@ -25,7 +27,15 @@ function isNarrowViewport() {
 
 function noop() {}
 
+// Stable reference for years with no admin-entered rehab overrides, so
+// `?? EMPTY_REHAB_META` doesn't hand computeRehabPlan a fresh object
+// identity on every render and force it to recompute the whole plan.
+const EMPTY_REHAB_META: Record<string, SectionRehabOverride> = {};
+
 export default function RehabTab({ sections, selectedYear }: RehabTabProps) {
+  const { overrides } = useData();
+  const rehabOverrides = overrides.sectionRehab[selectedYear] ?? EMPTY_REHAB_META;
+
   const [isNarrow, setIsNarrow] = useState(isNarrowViewport);
   const [viewportWidth, setViewportWidth] = useState(() => window.innerWidth);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(isNarrowViewport);
@@ -43,7 +53,7 @@ export default function RehabTab({ sections, selectedYear }: RehabTabProps) {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  const plan = useMemo(() => computeRehabPlan(sections), [sections]);
+  const plan = useMemo(() => computeRehabPlan(sections, rehabOverrides), [sections, rehabOverrides]);
   const planBySection = useMemo(() => {
     const map: Record<string, RehabPlanItem> = {};
     for (const item of plan) map[item.section.Section] = item;

@@ -1,6 +1,7 @@
 import type { GeoJSONFeatureCollection } from "@/lib/geojson-types";
 import type { BranchRole, Detectability } from "@/config/riskScales";
 import type { SectionData } from "@/lib/pci-utils";
+import type { RehabTreatment, RehabYear } from "@/lib/rehab";
 
 export interface AddedYearMeta {
   id: string;
@@ -38,6 +39,17 @@ export interface SectionRiskMetaOverride {
   lfcOverride?: LfcOverride;
 }
 
+// Per-branch rehabilitation plan fields (Admin -> Rehabilitation Plan). Same
+// demo-override status as sectionRiskMeta above: computeRehabPlan (rehab.ts)
+// falls back to its computed treatment/priorityYear/dummy cost when a field
+// here is absent, never a hard failure.
+export interface SectionRehabOverride {
+  treatment?: RehabTreatment;
+  priorityYear?: RehabYear;
+  /** Planning-level placeholder cost in IDR - see rehab.ts, not a real estimate. */
+  costIdr?: number;
+}
+
 // A correction to the base GeoJSON's own inventory fields (pavement type,
 // PCN, dimension, last major construction year) - same field names as
 // SectionData, so applying it is a plain spread onto feature.properties.
@@ -57,6 +69,7 @@ export interface DataOverrides {
   uploadedUnits: Record<string, Record<string, GeoJSONFeatureCollection>>;
   sectionRiskMeta: Record<string, Record<string, SectionRiskMetaOverride>>;
   sectionInventory: Record<string, Record<string, SectionInventoryOverride>>;
+  sectionRehab: Record<string, Record<string, SectionRehabOverride>>;
 }
 
 // Merges a partial patch into an existing override object. A key explicitly
@@ -85,6 +98,13 @@ export function mergeSectionInventory(
   return mergePatch(existing, patch);
 }
 
+export function mergeSectionRehab(
+  existing: SectionRehabOverride,
+  patch: Partial<SectionRehabOverride>
+): SectionRehabOverride {
+  return mergePatch(existing, patch);
+}
+
 const STORAGE_KEY = "apms-data-overrides-v1";
 
 export function emptyOverrides(): DataOverrides {
@@ -97,6 +117,7 @@ export function emptyOverrides(): DataOverrides {
     uploadedUnits: {},
     sectionRiskMeta: {},
     sectionInventory: {},
+    sectionRehab: {},
   };
 }
 

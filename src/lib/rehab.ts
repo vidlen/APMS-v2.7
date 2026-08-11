@@ -1,5 +1,7 @@
 import type { SectionData } from "./pci-utils.ts";
 import { parsePCIValue } from "./pci-utils.ts";
+import { parseDimension } from "./section-meta-utils.ts";
+import type { SectionRehabOverride } from "./data-overrides.ts";
 
 export type RehabTreatment =
   | "No M&R"
@@ -38,11 +40,18 @@ export const REHAB_METHODOLOGY: { treatment: RehabTreatment; maxPci: number }[] 
 // PCI above which no treatment is needed - the least severe row's ceiling.
 export const REHAB_TRIGGER_PCI = REHAB_METHODOLOGY[REHAB_METHODOLOGY.length - 1].maxPci;
 
+// Dropdown order for the admin editor: least to most severe.
+export const REHAB_TREATMENTS: RehabTreatment[] = [
+  "No M&R",
+  ...REHAB_METHODOLOGY.map((r) => r.treatment).reverse(),
+];
+
 export interface RehabPlanItem {
   section: SectionData;
   pci: number;
   treatment: RehabTreatment;
   priorityYear: RehabYear;
+  costIdr: number;
   color: string;
 }
 
@@ -53,11 +62,61 @@ function getTreatment(pci: number): RehabTreatment {
   return "No M&R";
 }
 
+// Dummy planning-level unit rates (IDR/m²) - not a quantity-surveyed cost,
+// just enough to make "funds needed" scale sensibly with treatment severity
+// and section size instead of showing a flat or fabricated-looking number.
+// Upgrade path: replace with a real bill of quantities.
+const DUMMY_UNIT_RATE_IDR: Record<Exclude<RehabTreatment, "No M&R">, number> = {
+  "Seal Coat / Crack Sealing": 50_000,
+  "5 cm Overlay": 350_000,
+  "6 cm Overlay": 420_000,
+  "12 cm Structural Overlay": 850_000,
+};
+
+// Fallback area for the rare section whose Dimension string doesn't parse
+// (see parseDimension) - keeps cost estimation total, not silently zero.
+const DEFAULT_AREA_M2 = 1000;
+
+function estimateAreaM2(section: SectionData): number {
+  const parsed = section.Dimension ? parseDimension(section.Dimension) : null;
+  if (!parsed) return DEFAULT_AREA_M2;
+  return parsed.kind === "area" ? parsed.area : parsed.length * parsed.width;
+}
+
+function estimateCostIdr(treatment: RehabTreatment, section: SectionData): number {
+  if (treatment === "No M&R") return 0;
+  return Math.round(estimateAreaM2(section) * DUMMY_UNIT_RATE_IDR[treatment]);
+}
+
+export function formatIdr(amount: number): string {
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
+
+export function formatIdrCompact(amount: number): string {
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(amount);
+}
+
 // Priority year: branches that trigger (any treatment other than No M&R) are
 // ranked worst-PCI-first - the same ordering risk.ts' comparePriorityOrders
 // already compares itself against - and spread evenly across a 5-year
-// window, worst branches first.
-export function computeRehabPlan(sections: SectionData[]): RehabPlanItem[] {
+// window, worst branches first. `overrides` (Admin -> Rehabilitation Plan,
+// same localStorage-demo status as the Risk Inventory overrides) replaces
+// the computed treatment/priorityYear/cost per branch; it never changes
+// which branches count as "triggered" for the auto-bucketing above, so
+// overriding one branch can't silently reshuffle every other branch's year.
+export function computeRehabPlan(
+  sections: SectionData[],
+  overrides: Record<string, SectionRehabOverride> = {},
+): RehabPlanItem[] {
   const branches = sections.filter((s) => s.sampleUnit === undefined);
 
   const scored = branches.map((section) => {
@@ -73,7 +132,10 @@ export function computeRehabPlan(sections: SectionData[]): RehabPlanItem[] {
   });
 
   return scored.map((item) => {
-    const priorityYear = yearBySection.get(item.section.Section) ?? "Not Scheduled";
-    return { ...item, priorityYear, color: REHAB_YEAR_COLORS[priorityYear] };
+    const override = overrides[item.section.Section];
+    const treatment = override?.treatment ?? item.treatment;
+    const priorityYear = override?.priorityYear ?? yearBySection.get(item.section.Section) ?? "Not Scheduled";
+    const costIdr = override?.costIdr ?? estimateCostIdr(treatment, item.section);
+    return { section: item.section, pci: item.pci, treatment, priorityYear, costIdr, color: REHAB_YEAR_COLORS[priorityYear] };
   });
 }
