@@ -121,7 +121,6 @@ export default function RehabDetailPanel({ item, onClose }: RehabDetailPanelProp
           <p className="text-foreground text-2xl font-bold font-mono tabular-nums">
             {costIdr > 0 ? formatIdr(costIdr) : "—"}
           </p>
-          <p className="text-muted-foreground text-xs mt-1">Placeholder estimate for demonstration only</p>
         </section>
 
         {/* Last Major Construction */}
