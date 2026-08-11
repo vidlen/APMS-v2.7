@@ -184,12 +184,6 @@ export default function RehabDetailPanel({ item, onClose }: RehabDetailPanelProp
           <p className="text-foreground text-base font-medium">{section.Type}</p>
         </section>
       </div>
-
-      <div className="px-5 py-3 border-t border-border shrink-0">
-        <p className="text-[11px] uppercase tracking-wider text-muted-foreground/70 text-center">
-          Planning-level estimate — not a cost or engineering document
-        </p>
-      </div>
     </div>
   );
 }
