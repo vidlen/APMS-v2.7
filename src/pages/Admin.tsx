@@ -10,11 +10,20 @@ import ImportExportPanel from "@/components/admin/ImportExportPanel";
 import RiskInventoryTable from "@/components/admin/RiskInventoryTable";
 import RehabInventoryTable from "@/components/admin/RehabInventoryTable";
 
+type AdminTab = "pci" | "rehab" | "risk";
+
+const ADMIN_TABS: { id: AdminTab; label: string }[] = [
+  { id: "pci", label: "Pavement Condition Index (PCI)" },
+  { id: "rehab", label: "Rehabilitation Plan" },
+  { id: "risk", label: "Risk Management" },
+];
+
 export default function Admin() {
   const { isAdmin, authReady } = useAuth();
   const { years } = useData();
   const [selectedYear, setSelectedYear] = useState<string>(() => years[0]?.id ?? "2025");
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<AdminTab>("pci");
 
   if (!authReady) return null;
   if (!isAdmin) return <Navigate to="/" replace />;
@@ -51,46 +60,81 @@ export default function Admin() {
         </div>
       </header>
 
+      {/* Admin tabs — same tablist pattern as the main workspace tabs
+          (src/pages/Home.tsx), so each area gets its own screen instead of
+          one long stack. Year selection stays outside the tabs since every
+          tab below reads the same selectedYear. */}
+      <div
+        className="shrink-0 flex items-center justify-center gap-4 bg-card border-b border-border z-20 px-4"
+        role="tablist"
+      >
+        <div className="flex items-center gap-[30px] overflow-x-auto">
+          {ADMIN_TABS.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              aria-selected={activeTab === tab.id}
+              role="tab"
+              className={`shrink-0 py-2.5 font-condensed text-[12.5px] font-semibold tracking-[.13em] uppercase border-b-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary ${
+                activeTab === tab.id
+                  ? "text-foreground border-b-primary"
+                  : "text-muted-foreground border-b-transparent hover:text-foreground"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="flex-1 overflow-y-auto custom-scrollbar p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
         <div className="max-w-4xl mx-auto space-y-6">
           <YearManager selectedYear={selectedYear} onSelectYear={handleSelectYear} />
 
-          <div className="panel-surface rounded-lg overflow-hidden">
-            <div className="px-4 py-3 border-b border-border flex items-center justify-between">
-              <h2 className="text-sm font-bold text-foreground">
-                Section PCI — {selectedYear}
-              </h2>
-            </div>
-            <SectionEditorTable year={selectedYear} onEditUnits={setExpandedSection} />
-          </div>
+          {activeTab === "pci" && (
+            <>
+              <div className="panel-surface rounded-lg overflow-hidden">
+                <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+                  <h2 className="text-sm font-bold text-foreground">
+                    Section PCI — {selectedYear}
+                  </h2>
+                </div>
+                <SectionEditorTable year={selectedYear} onEditUnits={setExpandedSection} />
+              </div>
 
-          {expandedSection && (
-            <SampleUnitTable
-              year={selectedYear}
-              section={expandedSection}
-              onClose={() => setExpandedSection(null)}
-            />
+              {expandedSection && (
+                <SampleUnitTable
+                  year={selectedYear}
+                  section={expandedSection}
+                  onClose={() => setExpandedSection(null)}
+                />
+              )}
+
+              <ImportExportPanel year={selectedYear} />
+            </>
           )}
 
-          <div className="panel-surface rounded-lg overflow-hidden">
-            <div className="px-4 py-3 border-b border-border">
-              <h2 className="text-sm font-bold text-foreground">
-                Risk Inventory — {selectedYear}
-              </h2>
+          {activeTab === "rehab" && (
+            <div className="panel-surface rounded-lg overflow-hidden">
+              <div className="px-4 py-3 border-b border-border">
+                <h2 className="text-sm font-bold text-foreground">
+                  Rehabilitation Plan — {selectedYear}
+                </h2>
+              </div>
+              <RehabInventoryTable year={selectedYear} />
             </div>
-            <RiskInventoryTable year={selectedYear} />
-          </div>
+          )}
 
-          <div className="panel-surface rounded-lg overflow-hidden">
-            <div className="px-4 py-3 border-b border-border">
-              <h2 className="text-sm font-bold text-foreground">
-                Rehabilitation Plan — {selectedYear}
-              </h2>
+          {activeTab === "risk" && (
+            <div className="panel-surface rounded-lg overflow-hidden">
+              <div className="px-4 py-3 border-b border-border">
+                <h2 className="text-sm font-bold text-foreground">
+                  Risk Inventory — {selectedYear}
+                </h2>
+              </div>
+              <RiskInventoryTable year={selectedYear} />
             </div>
-            <RehabInventoryTable year={selectedYear} />
-          </div>
-
-          <ImportExportPanel year={selectedYear} />
+          )}
         </div>
       </div>
     </div>
