@@ -47,9 +47,9 @@ export default function SearchBar({ sections, onSelect, selectedSection }: Searc
   };
 
   return (
-    <div className="relative w-full max-w-[180px] sm:max-w-[250px]">
+    <div className="relative w-full max-w-[200px] sm:max-w-[280px]">
       <div
-        className={`flex items-center gap-2.5 bg-background border border-border rounded-[5px] h-8 px-3 transition-colors ${
+        className={`flex items-center gap-2.5 bg-background border border-border rounded-md h-8 px-3 transition-colors ${
           focused ? "border-primary/50 ring-1 ring-primary/30 bg-card" : ""
         }`}
       >
@@ -57,7 +57,7 @@ export default function SearchBar({ sections, onSelect, selectedSection }: Searc
         <input
           ref={inputRef}
           type="text"
-          placeholder="Search branch or PCN"
+          placeholder="Search…"
           aria-label="Search branch or PCN"
           role="combobox"
           aria-expanded={focused}
@@ -81,7 +81,7 @@ export default function SearchBar({ sections, onSelect, selectedSection }: Searc
           </button>
         ) : (
           !focused && (
-            <Kbd className="font-mono shrink-0" aria-hidden>
+            <Kbd className="font-mono shrink-0 border border-border/60" aria-hidden>
               /
             </Kbd>
           )
