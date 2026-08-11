@@ -19,7 +19,13 @@ import { countByCondition, pciCategories, parsePCIValue, type SectionData } from
 import type { SurveyYear } from "@/lib/survey-years";
 import { useData } from "@/lib/data-store";
 
-const NARROW_BREAKPOINT = 640;
+// Raised from 640 after measuring the actual content: the workspace tab
+// bar's full labels alone need ~742px of scrollWidth (774px of viewport
+// once its px-4 padding is counted) - 768 still left it scrollable with no
+// affordance. 800 gives that a safety margin. 640 was "phone vs. not
+// phone," not "does the desktop chrome actually fit."
+// Keep in sync with src/hooks/useNarrowViewport.ts's copy of this constant.
+const NARROW_BREAKPOINT = 800;
 const MIN_LOADING_SCREEN_MS = 2000;
 
 type WorkspaceTab = "pci" | "forecast" | "rehab" | "risk";

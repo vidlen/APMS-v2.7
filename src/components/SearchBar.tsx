@@ -46,8 +46,14 @@ export default function SearchBar({ sections, onSelect, selectedSection }: Searc
     setFocused(false);
   };
 
+  // Single cap, no sm: tier: flex-1 + min-w-0 already do the real adaptive
+  // sizing (shrinking to whatever room the title/tabs leave at any width),
+  // and Tailwind's sm: breakpoint (640px, fixed) doesn't track this app's
+  // own narrow-viewport threshold (800px, see NARROW_BREAKPOINT in
+  // Home.tsx) - two uncoordinated breakpoints here previously fought each
+  // other in the 640-800px range.
   return (
-    <div className="relative flex-1 min-w-0 max-w-[200px] sm:max-w-[280px]">
+    <div className="relative flex-1 min-w-0 max-w-[180px]">
       <div
         className={`flex items-center gap-2.5 bg-background border border-border rounded-md h-8 px-3 transition-colors ${
           focused ? "border-primary/50 ring-1 ring-primary/30 bg-card" : ""

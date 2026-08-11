@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 
 // Below this width, workspace/admin tabs switch to a short label and panels
-// default to collapsed/full-width. Same breakpoint Home.tsx has used for the
-// PCI tab shell since it was first made mobile-responsive.
-const NARROW_BREAKPOINT = 640;
+// default to collapsed/full-width. Keep this in sync with Home.tsx's own
+// copy of the constant - raised from 640 after measuring that the
+// full-label tab bar alone needs ~774px of viewport including its padding.
+const NARROW_BREAKPOINT = 800;
 
 function isNarrow(): boolean {
   return typeof window !== "undefined" && window.innerWidth < NARROW_BREAKPOINT;
