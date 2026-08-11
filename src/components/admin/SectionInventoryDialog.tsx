@@ -7,7 +7,6 @@ import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -18,7 +17,7 @@ import { Pencil } from "lucide-react";
 interface SectionInventoryDialogProps {
   section: string;
   /** The row's current effective values (override, or the base GeoJSON value if none). */
-  current: { type: string; pcn: string; dimension: string; lastMajorConstructionYear: string };
+  current: { dimension: string; lastMajorConstructionYear: string };
   override?: SectionInventoryOverride;
   onSave: (patch: SectionInventoryOverride) => void;
   onClear: () => void;
@@ -32,19 +31,17 @@ export default function SectionInventoryDialog({
   onClear,
 }: SectionInventoryDialogProps) {
   const [open, setOpen] = useState(false);
-  const [type, setType] = useState(current.type);
-  const [pcn, setPcn] = useState(current.pcn);
   const [dimension, setDimension] = useState(current.dimension);
   const [year, setYear] = useState(current.lastMajorConstructionYear);
 
-  const hasOverride = Boolean(override && Object.keys(override).length > 0);
+  const hasOverride = Boolean(
+    override && (override.Dimension !== undefined || override["Last Major Construction Year"] !== undefined)
+  );
 
   const handleOpenChange = (next: boolean) => {
     // Radix unmounts DialogContent on close, so reset the draft to the
     // currently-effective values on every fresh open (see LfcOverrideDialog).
     if (next) {
-      setType(current.type);
-      setPcn(current.pcn);
       setDimension(current.dimension);
       setYear(current.lastMajorConstructionYear);
     }
@@ -53,10 +50,8 @@ export default function SectionInventoryDialog({
 
   const handleSave = () => {
     // A field cleared back to blank means "stop overriding this field", not
-    // "save it as blank" - Type/PCN are never empty in the base survey data.
+    // "save it as blank".
     const patch: SectionInventoryOverride = {
-      Type: type.trim() || undefined,
-      PCN: pcn.trim() || undefined,
       Dimension: dimension.trim() || undefined,
       "Last Major Construction Year": year.trim() || undefined,
     };
@@ -89,26 +84,10 @@ export default function SectionInventoryDialog({
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{section} &mdash; edit inventory details</DialogTitle>
-          <DialogDescription>
-            Corrects this branch's pavement type, PCN, dimension, and last major construction year.
-            Clear a field to fall back to the source survey data.
-          </DialogDescription>
+          <DialogTitle>{section}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
-          <div className="space-y-1.5">
-            <Label className="text-xs" htmlFor="inv-type">
-              Pavement type
-            </Label>
-            <Input id="inv-type" value={type} onChange={(e) => setType(e.target.value)} className="h-8 text-xs" />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs" htmlFor="inv-pcn">
-              PCN
-            </Label>
-            <Input id="inv-pcn" value={pcn} onChange={(e) => setPcn(e.target.value)} className="h-8 text-xs font-mono" />
-          </div>
           <div className="space-y-1.5">
             <Label className="text-xs" htmlFor="inv-dimension">
               Dimension

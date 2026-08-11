@@ -41,6 +41,20 @@ export default function SectionEditorTable({ year, onEditUnits }: SectionEditorT
     toast.success(`Updated ${section}`);
   };
 
+  const handleSaveType = (section: string, raw: string) => {
+    const trimmed = raw.trim();
+    if (!trimmed) return;
+    setSectionInventory(year, section, { Type: trimmed });
+    toast.success(`Updated ${section}`);
+  };
+
+  const handleSavePcn = (section: string, raw: string) => {
+    const trimmed = raw.trim();
+    if (!trimmed) return;
+    setSectionInventory(year, section, { PCN: trimmed });
+    toast.success(`Updated ${section}`);
+  };
+
   if (loading) {
     return <p className="text-muted-foreground text-sm px-4 py-6">Loading…</p>;
   }
@@ -72,8 +86,24 @@ export default function SectionEditorTable({ year, onEditUnits }: SectionEditorT
           return (
             <TableRow key={s.Section}>
               <TableCell className="font-medium text-foreground">{s.Section}</TableCell>
-              <TableCell className="text-muted-foreground">{s.Type}</TableCell>
-              <TableCell className="font-mono text-xs text-muted-foreground">{s.PCN}</TableCell>
+              <TableCell>
+                <Input
+                  key={`${year}-${s.Section}-type-${s.Type}`}
+                  defaultValue={s.Type}
+                  className="h-8 w-32"
+                  onBlur={(e) => handleSaveType(s.Section, e.target.value)}
+                  onKeyDown={saveOnEnter}
+                />
+              </TableCell>
+              <TableCell>
+                <Input
+                  key={`${year}-${s.Section}-pcn-${s.PCN}`}
+                  defaultValue={s.PCN}
+                  className="h-8 w-28 font-mono text-xs"
+                  onBlur={(e) => handleSavePcn(s.Section, e.target.value)}
+                  onKeyDown={saveOnEnter}
+                />
+              </TableCell>
               <TableCell className="text-right">
                 {hasUnits ? (
                   <span
@@ -96,16 +126,12 @@ export default function SectionEditorTable({ year, onEditUnits }: SectionEditorT
                 <SectionInventoryDialog
                   section={s.Section}
                   current={{
-                    type: s.Type,
-                    pcn: s.PCN,
                     dimension: s.Dimension ?? "",
                     lastMajorConstructionYear: s["Last Major Construction Year"] ?? "",
                   }}
                   override={inventoryOverrides[s.Section]}
                   onSave={(patch) => setSectionInventory(year, s.Section, patch)}
                   onClear={() => setSectionInventory(year, s.Section, {
-                    Type: undefined,
-                    PCN: undefined,
                     Dimension: undefined,
                     "Last Major Construction Year": undefined,
                   })}
