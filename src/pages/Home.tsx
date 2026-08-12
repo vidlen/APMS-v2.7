@@ -44,15 +44,15 @@ const WORKSPACE_TABS: { id: WorkspaceTab; label: string; shortLabel: string; pla
     placeholderCaption: "This Feature Still Waiting for ATC Clearance to Take Off",
   },
   {
-    id: "rehab",
-    label: "Rehabilitation Plan",
-    shortLabel: "Rehab",
-    placeholderCaption: "No PCI survey data loaded for this year yet",
-  },
-  {
     id: "risk",
     label: "Risk Management",
     shortLabel: "Risk",
+    placeholderCaption: "No PCI survey data loaded for this year yet",
+  },
+  {
+    id: "rehab",
+    label: "Rehabilitation Plan",
+    shortLabel: "Rehab",
     placeholderCaption: "No PCI survey data loaded for this year yet",
   },
 ];

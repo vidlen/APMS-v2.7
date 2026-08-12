@@ -18,8 +18,8 @@ type AdminTab = "pci" | "rehab" | "risk";
 // tab bar with no scroll affordance).
 const ADMIN_TABS: { id: AdminTab; label: string; shortLabel: string }[] = [
   { id: "pci", label: "Pavement Condition Index (PCI)", shortLabel: "PCI" },
-  { id: "rehab", label: "Rehabilitation Plan", shortLabel: "Rehab" },
   { id: "risk", label: "Risk Management", shortLabel: "Risk" },
+  { id: "rehab", label: "Rehabilitation Plan", shortLabel: "Rehab" },
 ];
 
 export default function Admin() {
